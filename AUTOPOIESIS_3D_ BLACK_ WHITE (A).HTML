@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modelo de Autopoiesis: Sistemas Autoorganizados</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        body {
+            background-color: #000000;
+            color: #FFFFFF;
+            font-family: 'Orbitron', sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        .main-container {
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            gap: 20px;
+            box-sizing: border-box;
+        }
+        .content { grid-column: 1 / 2; }
+        .sidebar {
+            grid-column: 2 / 3;
+            position: sticky;
+            top: 20px;
+            align-self: start;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+        .header {
+            grid-column: 1 / 3;
+            position: relative;
+            height: 60vh;
+            background: url('https://images.unsplash.com/photo-1516339901601-2e1b62dc0c45?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center/cover;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #FFFFFF;
+            text-shadow: 0 0 15px #000000;
+            animation: fadeIn 2s ease-in;
+        }
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1;
+        }
+        .header h1, .header p {
+            position: relative;
+            z-index: 2;
+        }
+        .header h1 {
+            font-size: clamp(2em, 4vw, 4em);
+            animation: glow 2s infinite alternate;
+        }
+        @keyframes glow {
+            from { text-shadow: 0 0 5px #FFFFFF; }
+            to { text-shadow: 0 0 20px #000000; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section {
+            margin: 40px 0;
+            padding: 25px;
+            border: 2px solid #FFFFFF;
+            box-shadow: 0 0 20px #000000;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .sidebar .section {
+            margin: 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        #visualization-section { margin-top: 20px; }
+        h2 {
+            color: #FFFFFF;
+            text-shadow: 0 0 8px #000000;
+            border-bottom: 1px solid #FFFFFF;
+            padding-bottom: 10px;
+            margin: 0 0 15px 0;
+            font-size: 1.5em;
+            text-align: center;
+        }
+        h3 {
+            color: #FFFFFF;
+            margin: 20px 0 10px 0;
+            font-size: 1.2em;
+        }
+        p {
+            color: #FFFFFF;
+            font-size: 1.1em;
+            margin: 0 0 10px 0;
+        }
+        .highlight, .substrate, .catalyst, .link { 
+            color: #FFFFFF; 
+            font-weight: bold; 
+            text-decoration: none; 
+            transition: text-shadow 0.3s ease; 
+        }
+        .highlight:hover { text-shadow: 0 0 10px #FFFFFF; }
+        button {
+            background: none;
+            border: 2px solid #FFFFFF;
+            color: #FFFFFF;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: #FFFFFF;
+            color: #000000;
+            text-shadow: 0 0 10px #FFFFFF;
+        }
+        input[type="range"] {
+            width: 100%;
+            accent-color: #FFFFFF;
+        }
+        #visualization {
+            width: 100%;
+            height: 600px;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            background: #FFFFFF; /* Fondo blanco para la simulación */
+        }
+        .footer {
+            grid-column: 1 / 3;
+            text-align: center;
+            padding: 30px;
+            color: #FFFFFF;
+            border-top: 2px solid #FFFFFF;
+            margin-top: 40px;
+        }
+        @media (max-width: 768px) {
+            .main-container { grid-template-columns: 1fr; padding: 10px; gap: 10px; }
+            .content, .sidebar, .footer, .header { grid-column: 1 / 2; }
+            .header { height: 40vh; }
+            .header h1 { font-size: clamp(1.5em, 3vw, 2.5em); }
+            .header p { font-size: 0.9em; }
+            .sidebar { position: static; max-height: none; }
+            .section { margin: 20px 0; padding: 15px; }
+            .sidebar .section { padding: 15px; }
+            #visualization { height: 400px; }
+            h2 { font-size: 1.2em; }
+            h3 { font-size: 1em; }
+            p { font-size: 0.95em; }
+            button { padding: 8px 16px; font-size: 0.9em; }
+        }
+        @media (max-width: 480px) {
+            .header { height: 30vh; }
+            .header h1 { font-size: clamp(1.2em, 2.5vw, 2em); }
+            .header p { font-size: 0.8em; }
+            #visualization { height: 300px; }
+            .section { margin: 15px 0; padding: 10px; }
+            .sidebar .section { padding: 10px; }
+            h2 { font-size: 1em; }
+            h3 { font-size: 0.9em; }
+            p { font-size: 0.85em; }
+            button { padding: 6px 12px; font-size: 0.8em; }
+            input[type="range"] { width: 90%; margin: 0 auto; display: block; }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1>Modelo de Autopoiesis</h1>
+            <p>Simulando la Esencia de los Sistemas Vivos</p>
+        </div>
+        <div class="content">
+            <div class="section" id="visualization-section">
+                <h2>Simulación 3D</h2>
+                <div id="visualization"></div>
+            </div>
+            <div class="section" id="intro">
+                <h2>Introducción a la Autopoiesis</h2>
+                <p>Imagina un sistema que se construye desde dentro, una entidad viva que desafía el caos tejiendo su propia existencia. La <span class="highlight">autopoiesis</span>, un concepto revolucionario de los biólogos Humberto Maturana y Francisco Varela, captura esta esencia de la vida. Describe sistemas que se automantienen al producir y regenerar sus propios componentes mediante una red cerrada de procesos. Visualiza una célula: su danza química sostiene su forma frente a la entropía. En esta simulación, los <span class="substrate">sustratos</span> (esferas huecas negras) se mueven aleatoriamente, las <span class="catalyst">enzimas</span> (estrellas negras sólidas) catalizan la formación de <span class="link">enlaces</span> (cubos huecos negros), reflejando el equilibrio dinámico de la vida.</p>
+            </div>
+            <div class="section" id="concepts">
+                <h2>Síntesis de "Autopoiesis: La Organización de los Sistemas Vivos" (Varela y Maturana, 1974)</h2>
+                <h3>1. Introducción</h3><p>Este trabajo seminal redefine la vida, alejándose de la reproducción y la evolución como rasgos definitorios. En su lugar, centra la atención en la <span class="highlight">unidad</span> de los sistemas vivos y su organización intrínseca.</p>
+                <h3>2. Organización</h3><p>Todo sistema puede verse como una <span class="highlight">unidad</span> singular o como una red compleja de componentes. Su <span class="highlight">organización</span>—la trama relacional que une estas partes—lo convierte en un todo funcional.</p>
+                <h3>3. Organización Autopoiética</h3><p>Un sistema autopoiético se caracteriza por:</p><ul><li>Una <span class="highlight">red de producción</span> donde los componentes se generan recursivamente a sí mismos.</li><li>Una unidad que se sostiene gracias a esta red.</li></ul><p><strong>Ejemplo:</strong> Una célula, con sus reacciones químicas renovando constantemente su estructura, encarna la autopoiesis.</p>
+                <h3>4. Autopoiesis vs. Alopoiesis</h3><p>Los <span class="highlight">sistemas autopoiéticos</span> crean sus propios componentes, preservando su identidad. Los <span class="highlight">sistemas alopoiéticos</span>, como un ribosoma, producen algo externo a sí mismos.</p>
+                <h3>5. La Autopoiesis como Núcleo de la Vida</h3><p>Los seres vivos son inherentemente autopoiéticos. La reproducción y la evolución son secundarias; el corazón de la vida reside en esta unidad autoconstruida.</p>
+                <h3>6. Modelo de Simulación</h3><p>La simulación tridimensional que aquí presentamos incluye:</p><ul><li><span class="substrate">Sustratos (O)</span>: Esferas huecas negras que se mueven en el espacio 3D.</li><li><span class="catalyst">Enzimas (*)</span>: Estrellas negras sólidas que forman <span class="link">enlaces</span> (cubos huecos negros) entre sustratos.</li><li><strong>Autoreparación:</strong> Los enlaces se desintegran y regeneran sustratos, manteniendo la dinámica autopoiética.</li></ul>
+                <h3>7. Implicaciones y Aplicaciones</h3><p>La autopoiesis depende de dinámicas relacionales, no de materiales específicos. Esto abre caminos hacia:</p><ul><li><span class="highlight">Origen de la Vida:</span> Ejemplo: liposomas con reacciones internas.</li><li><span class="highlight">Vida Artificial:</span> Desafíos para sintetizar sistemas autopoiéticos.</li></ul>
+                <h3>8. Conclusión</h3><p>Un sistema autopoiético:</p><ol><li>Tiene <span class="highlight">límites</span> definidos.</li><li>Contiene <span class="highlight">componentes</span> internos.</li><li>Opera mecánicamente con interacciones precisas.</li><li>Genera sus propios <span class="highlight">límites</span> mediante interacciones.</li><li>Produce todos sus <span class="highlight">componentes</span> internamente.</li><li>Mantiene su <span class="highlight">organización</span> mientras sus procesos internos permanezcan activos.</li></ol><p>Este marco afina nuestra comprensión de lo vivo, conectando biología, inteligencia artificial y filosofía de la mente.</p>
+            </div>
+        </div>
+        <div class="sidebar">
+            <div class="section" id="controls">
+                <h2>Controles</h2>
+                <p>Enzimas Iniciales: <span id="enzymeCountValue">5</span></p>
+                <input type="range" id="enzymeCount" min="1" max="10" value="5">
+                <p>Velocidad de Sustrato (μm/s): <span id="substrateSpeedValue">5</span></p>
+                <input type="range" id="substrateSpeed" min="1" max="10" value="5">
+                <p>Tasa de Desintegración (s⁻¹): <span id="decayRateValue">0.005</span></p>
+                <input type="range" id="decayRate" min="0" max="0.01" step="0.0001" value="0.005">
+                <p>Estado: <span id="status">Sustratos: 0, Enlaces: 0, Enzimas: 0</span></p>
+                <button onclick="Simulation.reset()">Reiniciar</button>
+            </div>
+        </div>
+        <div class="footer">
+            <p>Explorando la Autopoiesis | Febrero 2025</p>
+        </div>
+    </div>
+
+    <script>
+        // Módulo de simulación encapsulado
+        const Simulation = (function() {
+            // Constantes
+            const GRID_SIZE = 20;
+            const CELL_SIZE = 1;
+            const CUBE_SIZE = GRID_SIZE * CELL_SIZE;
+
+            // Variables de estado
+            let scene, camera, renderer, controls;
+            let substrates = [], enzymes = [], links = [];
+            let enzymeCount = 5, substrateSpeed = 5, decayRate = 0.005;
+            let grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0)));
+
+            // Geometrías y materiales
+            const GEOMETRIES = {
+                substrate: new THREE.SphereGeometry(CELL_SIZE / 2, 16, 16),
+                enzyme: createStarGeometry(CELL_SIZE / 2),
+                link: new THREE.BoxGeometry(CELL_SIZE, CELL_SIZE, CELL_SIZE)
+            };
+            const MATERIALS = {
+                substrate: new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true }),
+                enzyme: new THREE.MeshBasicMaterial({ color: 0x000000 }),
+                link: new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true })
+            };
+
+            // Crear geometría de estrella para enzimas
+            function createStarGeometry(radius) {
+                const shape = new THREE.Shape();
+                const spikes = 5;
+                const outerRadius = radius;
+                const innerRadius = radius * 0.4;
+                for (let i = 0; i < spikes * 2; i++) {
+                    const angle = (i / (spikes * 2)) * Math.PI * 2;
+                    const r = i % 2 === 0 ? outerRadius : innerRadius;
+                    const x = Math.cos(angle) * r;
+                    const y = Math.sin(angle) * r;
+                    if (i === 0) shape.moveTo(x, y);
+                    else shape.lineTo(x, y);
+                }
+                shape.closePath();
+                return new THREE.ExtrudeGeometry(shape, { depth: radius * 0.5, bevelEnabled: false });
+            }
+
+            // Inicialización de Three.js
+            function init() {
+                const vizContainer = document.getElementById('visualization');
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xFFFFFF); // Fondo blanco
+
+                camera = new THREE.PerspectiveCamera(75, vizContainer.clientWidth / 600, 0.1, 1000);
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(vizContainer.clientWidth, 600);
+                vizContainer.appendChild(renderer.domElement);
+
+                // Grilla
+                const gridGroup = new THREE.Group();
+                const gridMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+                for (let i = 0; i <= GRID_SIZE; i++) {
+                    const offset = (i - GRID_SIZE / 2) * CELL_SIZE;
+                    for (let j = -GRID_SIZE / 2; j <= GRID_SIZE / 2; j++) {
+                        const pos = j * CELL_SIZE;
+                        gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+                            new THREE.Vector3(offset, pos, -CUBE_SIZE / 2),
+                            new THREE.Vector3(offset, pos, CUBE_SIZE / 2)
+                        ]), gridMaterial));
+                        gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+                            new THREE.Vector3(pos, offset, -CUBE_SIZE / 2),
+                            new THREE.Vector3(pos, offset, CUBE_SIZE / 2)
+                        ]), gridMaterial));
+                        gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+                            new THREE.Vector3(pos, -CUBE_SIZE / 2, offset),
+                            new THREE.Vector3(pos, CUBE_SIZE / 2, offset)
+                        ]), gridMaterial));
+                    }
+                }
+                scene.add(gridGroup);
+
+                // Borde del cubo
+                const cubeGeometry = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE);
+                const cubeEdges = new THREE.EdgesGeometry(cubeGeometry);
+                const cubeMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+                scene.add(new THREE.LineSegments(cubeEdges, cubeMaterial));
+
+                // Cámara y controles
+                camera.position.set(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE * 1.5);
+                camera.lookAt(0, 0, 0);
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.05;
+                controls.minDistance = CUBE_SIZE * 0.5;
+                controls.maxDistance = CUBE_SIZE * 2;
+
+                window.addEventListener('resize', resize);
+                setupControls();
+            }
+
+            // Configuración de controles de UI
+            function setupControls() {
+                const updateValue = (slider, display, callback) => {
+                    slider.oninput = () => {
+                        const value = +slider.value;
+                        display.textContent = slider.id === 'decayRate' ? value.toFixed(4) : value;
+                        callback(value);
+                    };
+                };
+                updateValue(document.getElementById('enzymeCount'), document.getElementById('enzymeCountValue'), val => enzymeCount = val);
+                updateValue(document.getElementById('substrateSpeed'), document.getElementById('substrateSpeedValue'), val => substrateSpeed = val);
+                updateValue(document.getElementById('decayRate'), document.getElementById('decayRateValue'), val => decayRate = val);
+            }
+
+            // Reiniciar simulación
+            function reset() {
+                [substrates, enzymes, links].forEach(arr => arr.forEach(obj => scene.remove(obj.mesh)));
+                substrates = [];
+                enzymes = [];
+                links = [];
+                grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0)));
+
+                const substrateCount = Math.min(1000, GRID_SIZE * GRID_SIZE * GRID_SIZE * 0.3);
+                for (let i = 0; i < substrateCount; i++) {
+                    let pos;
+                    do { pos = randomGridPosition(); } while (grid[pos.x][pos.y][pos.z] !== 0);
+                    grid[pos.x][pos.y][pos.z] = 1;
+                    addParticle(substrates, MATERIALS.substrate, GEOMETRIES.substrate, pos);
+                }
+
+                for (let i = 0; i < enzymeCount; i++) {
+                    let pos;
+                    do { pos = randomGridPosition(); } while (grid[pos.x][pos.y][pos.z] !== 0);
+                    grid[pos.x][pos.y][pos.z] = 2;
+                    addParticle(enzymes, MATERIALS.enzyme, GEOMETRIES.enzyme, pos);
+                }
+                updateStatus();
+            }
+
+            // Generar posición aleatoria en la grilla
+            function randomGridPosition() {
+                return {
+                    x: Math.floor(Math.random() * GRID_SIZE),
+                    y: Math.floor(Math.random() * GRID_SIZE),
+                    z: Math.floor(Math.random() * GRID_SIZE)
+                };
+            }
+
+            // Añadir partícula a la escena
+            function addParticle(array, material, geometry, pos) {
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.set(
+                    (pos.x - GRID_SIZE / 2 + 0.5) * CELL_SIZE,
+                    (pos.y - GRID_SIZE / 2 + 0.5) * CELL_SIZE,
+                    (pos.z - GRID_SIZE / 2 + 0.5) * CELL_SIZE
+                );
+                array.push({ mesh, x: pos.x, y: pos.y, z: pos.z });
+                scene.add(mesh);
+            }
+
+            // Movimiento de sustratos
+            function moveSubstrates() {
+                substrates.forEach((s, index) => {
+                    if (Math.random() < substrateSpeed / 10) {
+                        const moves = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+                        const [dx, dy, dz] = moves[Math.floor(Math.random() * 6)];
+                        const newPos = { x: s.x + dx, y: s.y + dy, z: s.z + dz };
+                        if (isValid(newPos) && grid[newPos.x][newPos.y][newPos.z] === 0) {
+                            grid[s.x][s.y][s.z] = 0;
+                            s.x = newPos.x;
+                            s.y = newPos.y;
+                            s.z = newPos.z;
+                            grid[s.x][s.y][s.z] = 1;
+                            s.mesh.position.set(
+                                (s.x - GRID_SIZE / 2 + 0.5) * CELL_SIZE,
+                                (s.y - GRID_SIZE / 2 + 0.5) * CELL_SIZE,
+                                (s.z - GRID_SIZE / 2 + 0.5) * CELL_SIZE
+                            );
+                        }
+                    }
+                });
+            }
+
+            // Interacción para formar enlaces
+            function interact() {
+                enzymes.forEach(e => {
+                    const neighbors = getNeighbors(e.x, e.y, e.z).filter(n => grid[n.x][n.y][n.z] === 1);
+                    if (neighbors.length >= 2) {
+                        const [s1, s2] = neighbors.slice(0, 2);
+                        grid[s1.x][s1.y][s1.z] = 3;
+                        grid[s2.x][s2.y][s2.z] = 0;
+                        const s1Obj = substrates.find(s => s.x === s1.x && s.y === s1.y && s.z === s1.z);
+                        const s2Obj = substrates.find(s => s.x === s2.x && s.y === s2.y && s.z === s2.z);
+                        removeParticles([s1Obj, s2Obj], substrates);
+                        addParticle(links, MATERIALS.link, GEOMETRIES.link, s1);
+                    }
+                });
+                disintegrateLinks();
+            }
+
+            // Desintegración de enlaces
+            function disintegrateLinks() {
+                links = links.filter(l => {
+                    if (Math.random() < decayRate) {
+                        grid[l.x][l.y][l.z] = 1;
+                        scene.remove(l.mesh);
+                        addParticle(substrates, MATERIALS.substrate, GEOMETRIES.substrate, { x: l.x, y: l.y, z: l.z });
+                        return false;
+                    }
+                    return true;
+                });
+            }
+
+            // Utilidades
+            function isValid(pos) {
+                return pos.x >= 0 && pos.x < GRID_SIZE && pos.y >= 0 && pos.y < GRID_SIZE && pos.z >= 0 && pos.z < GRID_SIZE;
+            }
+
+            function getNeighbors(x, y, z) {
+                const neighbors = [];
+                for (let dx of [-1, 0, 1]) {
+                    for (let dy of [-1, 0, 1]) {
+                        for (let dz of [-1, 0, 1]) {
+                            if (dx === 0 && dy === 0 && dz === 0) continue;
+                            const nx = x + dx, ny = y + dy, nz = z + dz;
+                            if (isValid({ x: nx, y: ny, z: nz })) neighbors.push({ x: nx, y: ny, z: nz });
+                        }
+                    }
+                }
+                return neighbors;
+            }
+
+            function removeParticles(particles, array) {
+                particles.forEach(p => {
+                    if (p) {
+                        scene.remove(p.mesh);
+                        array.splice(array.indexOf(p), 1);
+                    }
+                });
+            }
+
+            function updateStatus() {
+                document.getElementById('status').textContent = 
+                    `Sustratos: ${substrates.length}, Enlaces: ${links.length}, Enzimas: ${enzymes.length}`;
+            }
+
+            // Animación
+            function animate() {
+                requestAnimationFrame(animate);
+                moveSubstrates();
+                interact();
+                updateStatus();
+                controls.update();
+                renderer.render(scene, camera);
+            }
+
+            // Redimensionar
+            function resize() {
+                const width = document.getElementById('visualization').clientWidth;
+                const height = window.innerWidth <= 768 ? (window.innerWidth <= 480 ? 300 : 400) : 600;
+                renderer.setSize(width, height);
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+            }
+
+            // Inicialización pública
+            function start() {
+                init();
+                reset();
+                animate();
+            }
+
+            return { start, reset };
+        })();
+
+        // Iniciar simulación
+        Simulation.start();
+    </script>
+</body>
+</html>
