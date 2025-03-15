@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autopoiesis: El Latido Digital de la Vida</title>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        /* Reset y base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #FFFFFF; /* Fondo blanco */
+            color: #000000; /* Texto negro */
+            font-family: 'Exo 2', sans-serif;
+            min-height: 100vh;
+            overflow-y: auto;
+        }
+        /* Contenedor principal */
+        .container {
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        /* Header */
+        header {
+            background: #FFFFFF; /* Fondo blanco */
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid #000000; /* Línea negra para separación */
+        }
+        header::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 0, 0, 0.1) 0%, transparent 70%);
+            animation: pulse 15s infinite;
+        }
+        header h1 {
+            font-size: clamp(2rem, 5vw, 4rem);
+            color: #000000;
+            text-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+            letter-spacing: 2px;
+            animation: fadeIn 1s ease-in;
+            position: relative;
+            z-index: 1;
+        }
+        header p {
+            font-size: 1.2rem;
+            color: #000000;
+            margin-top: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 0.2; }
+            100% { transform: scale(1); opacity: 0.5; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Contenido principal y sidebar en un contenedor flexible */
+        .content-wrapper {
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+        }
+        main {
+            flex: 1;
+            padding: 1.5rem;
+            background: #FFFFFF;
+            border-right: 1px solid #000000;
+        }
+        .section {
+            background: rgba(0, 0, 0, 0.05); /* Sombra negra sutil */
+            border: 1px solid #000000;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        #visualization-section {
+            height: 70vh;
+            display: flex;
+            flex-direction: column;
+            background: #FFFFFF;
+            border: 2px solid #000000;
+            padding: 1rem;
+        }
+        h2 {
+            color: #000000;
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+        }
+        h3 {
+            color: #000000;
+            font-size: 1.3rem;
+            margin: 1rem 0 0.5rem;
+        }
+        p, li {
+            font-size: 1rem;
+            line-height: 1.8;
+            color: #000000;
+        }
+        ul, ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .highlight, .substrate, .catalyst, .link { 
+            color: #000000; 
+            font-weight: 700; 
+        }
+        /* Visualization */
+        #visualization {
+            width: 100%;
+            height: calc(100% - 3rem);
+            background: #FFFFFF;
+            border-radius: 8px;
+            overflow: hidden;
+            flex-grow: 1;
+            position: relative;
+            border: 1px solid #000000;
+        }
+        .circle-substrate { fill: #000000; }
+        .circle-enzyme { fill: #000000; }
+        .circle-link { fill: #000000; }
+        /* Sidebar */
+        aside {
+            width: 300px;
+            padding: 1.5rem;
+            background: #FFFFFF;
+            border-left: 1px solid #000000;
+        }
+        aside .section {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            border-radius: 10px;
+        }
+        button {
+            background: #000000;
+            border: none;
+            color: #FFFFFF;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+        input[type="range"] {
+            width: 100%;
+            margin: 0.5rem 0;
+            accent-color: #000000;
+        }
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 1rem;
+            background: #FFFFFF;
+            border-top: 1px solid #000000;
+            color: #000000;
+            font-size: 0.9rem;
+        }
+        /* Media Queries */
+        @media (max-width: 1024px) {
+            aside {
+                width: 250px;
+            }
+            #visualization-section {
+                height: 60vh;
+            }
+        }
+        @media (max-width: 768px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+            aside {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid #000000;
+            }
+            main {
+                border-right: none;
+                border-bottom: 1px solid #000000;
+            }
+            #visualization-section {
+                height: 50vh;
+            }
+            header h1 {
+                font-size: clamp(1.8rem, 4vw, 3rem);
+            }
+            header p {
+                font-size: 1rem;
+            }
+        }
+        @media (max-width: 480px) {
+            header {
+                padding: 1rem;
+            }
+            main, aside {
+                padding: 1rem;
+            }
+            #visualization-section {
+                height: 40vh;
+            }
+            h2 {
+                font-size: 1.4rem;
+            }
+            h3 {
+                font-size: 1.1rem;
+            }
+            p, li {
+                font-size: 0.9rem;
+            }
+            button {
+                padding: 0.6rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Autopoiesis</h1>
+            <p>Simulando la Esencia de los Sistemas Vivos</p>
+        </header>
+
+        <div class="content-wrapper">
+            <main>
+                <div class="section" id="visualization-section">
+                    <h2>Simulación</h2>
+                    <div id="visualization"></div>
+                </div>
+
+                <div class="section" id="intro">
+                    <h2>Introducción a la Autopoiesis</h2>
+                    <p>Imagina un sistema que se construye desde dentro, una entidad viva que desafía el caos tejiendo su propia existencia. La <span class="highlight">autopoiesis</span>, un concepto revolucionario de los biólogos Humberto Maturana y Francisco Varela, captura esta esencia de la vida. Describe sistemas que se automantienen al producir y regenerar sus propios componentes mediante una red cerrada de procesos. Visualiza una célula: su danza química sostiene su forma frente a la entropía. En esta simulación, los <span class="substrate">sustratos</span>, <span class="catalyst">enzimas</span> y <span class="link">enlaces</span> (todos en negro sobre blanco) interactúan para reflejar el equilibrio dinámico de la vida.</p>
+                </div>
+
+                <div class="section" id="concepts">
+                    <h2>Síntesis de "Autopoiesis: La Organización de los Sistemas Vivos" (Varela y Maturana, 1974)</h2>
+                    
+                    <h3>1. Introducción</h3>
+                    <p>Este trabajo seminal redefine la vida, alejándose de la reproducción y la evolución como rasgos definitorios. En su lugar, centra la atención en la <span class="highlight">unidad</span> de los sistemas vivos y su organización intrínseca.</p>
+
+                    <h3>2. Organización</h3>
+                    <p>Todo sistema puede verse como una <span class="highlight">unidad</span> singular o como una red compleja de componentes. Su <span class="highlight">organización</span>—la trama relacional que une estas partes—lo convierte en un todo funcional.</p>
+
+                    <h3>3. Organización Autopoiética</h3>
+                    <p>Un sistema autopoiético se caracteriza por:</p>
+                    <ul>
+                        <li>Una <span class="highlight">red de producción</span> donde los componentes se generan recursivamente a sí mismos.</li>
+                        <li>Una unidad que se sostiene gracias a esta red.</li>
+                    </ul>
+                    <p><strong>Ejemplo:</strong> Una célula, con sus reacciones químicas renovando constantemente su estructura, encarna la autopoiesis.</p>
+
+                    <h3>4. Autopoiesis vs. Alopoiesis</h3>
+                    <p>Los <span class="highlight">sistemas autopoiéticos</span> crean sus propios componentes, preservando su identidad. Los <span class="highlight">sistemas alopoiéticos</span>, como un ribosoma, producen algo externo a sí mismos.</p>
+
+                    <h3>5. La Autopoiesis como Núcleo de la Vida</h3>
+                    <p>Los seres vivos son inherentemente autopoiéticos. La reproducción y la evolución son secundarias; el corazón de la vida reside en esta unidad autoconstruida.</p>
+
+                    <h3>6. Modelo de Simulación</h3>
+                    <p>La simulación bidimensional del artículo, reflejada aquí, incluye:</p>
+                    <ul>
+                        <li><span class="substrate">Sustratos (O)</span>: Materias primas que se mueven en el espacio.</li>
+                        <li><span class="catalyst">Catalizadores (*)</span>: Agentes que forman <span class="link">enlaces</span> entre sustratos, creando estructuras cerradas (membranas).</li>
+                        <li><strong>Autoreparación:</strong> Un catalizador atrapado en una membrana puede generar nuevos elementos, manteniendo la estructura y logrando autopoiesis.</li>
+                    </ul>
+
+                    <h3>7. Implicaciones y Aplicaciones</h3>
+                    <p>La autopoiesis depende de dinámicas relacionales, no de materiales específicos. Esto abre caminos hacia:</p>
+                    <ul>
+                        <li><span class="highlight">Origen de la Vida:</span> Ejemplo: liposomas con reacciones internas.</li>
+                        <li><span class="highlight">Vida Artificial:</span> Desafíos para sintetizar sistemas autopoiéticos.</li>
+                    </ul>
+
+                    <h3>8. Conclusión</h3>
+                    <p>Un sistema autopoiético:</p>
+                    <ol>
+                        <li>Tiene <span class="highlight">límites</span> definidos.</li>
+                        <li>Contiene <span class="highlight">componentes</span> internos.</li>
+                        <li>Opera mecánicamente con interacciones precisas.</li>
+                        <li>Genera sus propios <span class="highlight">límites</span> mediante interacciones.</li>
+                        <li>Produce todos sus <span class="highlight">componentes</span> internamente.</li>
+                        <li>Mantiene su <span class="highlight">organización</span> mientras sus procesos internos permanezcan activos.</li>
+                    </ol>
+                    <p>Este marco afina nuestra comprensión de lo vivo, conectando biología, inteligencia artificial y filosofía de la mente.</p>
+                </div>
+            </main>
+
+            <aside>
+                <div class="section">
+                    <h2>Controles</h2>
+                    <p>Enzimas: <span id="enzymeCountValue">10</span></p>
+                    <input type="range" id="enzymeCount" min="1" max="50" value="10">
+                    <p>Velocidad de Sustrato (μm/s): <span id="substrateSpeedValue">5</span></p>
+                    <input type="range" id="substrateSpeed" min="1" max="10" value="5">
+                    <p>Tasa de Decaimiento (s⁻¹): <span id="decayRateValue">0.001</span></p>
+                    <input type="range" id="decayRate" min="0" max="0.01" step="0.0001" value="0.001">
+                    <p>Estado: <span id="status">Sustratos: 0, Enlaces: 0, Enzimas: 0</span></p>
+                    <button onclick="resetSimulation()">Reiniciar</button>
+                </div>
+            </aside>
+        </div>
+
+        <footer>
+            <p>Explorando la Autopoiesis | Marzo 2025 | Diseñado por un Visionario</p>
+        </footer>
+    </div>
+
+    <script>
+        const vizContainer = document.getElementById('visualization');
+        let width = vizContainer.clientWidth;
+        const cellSize = 10;
+        let height = vizContainer.clientHeight;
+        const cols = Math.floor(width / cellSize);
+        const rows = Math.floor(height / cellSize);
+
+        const svg = d3.select("#visualization")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .style("background", "#FFFFFF");
+
+        let grid = Array(cols).fill().map(() => Array(rows).fill(0));
+        let substrates = [];
+        let enzymes = [];
+        let links = [];
+        let enzymeCount = 10;
+        let substrateSpeed = 5;
+        let decayRate = 0.001;
+
+        d3.select("#enzymeCount").on("input", function() {
+            enzymeCount = +this.value;
+            d3.select("#enzymeCountValue").text(enzymeCount);
+        });
+        d3.select("#substrateSpeed").on("input", function() {
+            substrateSpeed = +this.value;
+            d3.select("#substrateSpeedValue").text(substrateSpeed);
+        });
+        d3.select("#decayRate").on("input", function() {
+            decayRate = +this.value;
+            d3.select("#decayRateValue").text(decayRate.toFixed(4));
+        });
+
+        function resetSimulation() {
+            width = vizContainer.clientWidth;
+            height = vizContainer.clientHeight;
+            svg.attr("width", width).attr("height", height);
+            const newCols = Math.floor(width / cellSize);
+            const newRows = Math.floor(height / cellSize);
+            grid = Array(newCols).fill().map(() => Array(newRows).fill(0));
+            substrates = [];
+            enzymes = [];
+            links = [];
+
+            const substrateCount = Math.min(1000, Math.floor(newCols * newRows * 0.3));
+            for (let i = 0; i < substrateCount; i++) {
+                let x, y;
+                do {
+                    x = Math.floor(Math.random() * newCols);
+                    y = Math.floor(Math.random() * newRows);
+                } while (grid[x][y] !== 0);
+                grid[x][y] = 1;
+                substrates.push({ x, y });
+            }
+
+            for (let i = 0; i < enzymeCount; i++) {
+                let x, y;
+                do {
+                    x = Math.floor(Math.random() * newCols);
+                    y = Math.floor(Math.random() * newRows);
+                } while (grid[x][y] !== 0);
+                grid[x][y] = 2;
+                enzymes.push({ x, y });
+            }
+
+            updateVisualization();
+        }
+
+        function moveSubstrates() {
+            substrates.forEach(s => {
+                if (Math.random() < substrateSpeed / 10) {
+                    const dir = Math.floor(Math.random() * 4);
+                    const newX = s.x + [1, 0, -1, 0][dir];
+                    const newY = s.y + [0, 1, 0, -1][dir];
+                    if (isValid(newX, newY) && grid[newX][newY] === 0) {
+                        grid[s.x][s.y] = 0;
+                        s.x = newX;
+                        s.y = newY;
+                        grid[s.x][s.y] = 1;
+                    }
+                }
+            });
+        }
+
+        function interact() {
+            enzymes.forEach(e => {
+                const neighbors = getNeighbors(e.x, e.y);
+                const substrateNeighbors = neighbors.filter(n => grid[n.x][n.y] === 1);
+                if (substrateNeighbors.length >= 2) {
+                    const s1 = substrateNeighbors[0];
+                    const s2 = substrateNeighbors[1];
+                    grid[s1.x][s1.y] = 3;
+                    grid[s2.x][s2.y] = 0;
+                    substrates = substrates.filter(s => !(s.x === s1.x && s.y === s1.y) && !(s.x === s2.x && s.y === s2.y));
+                    links.push({ x: s1.x, y: s1.y });
+                }
+            });
+            disintegrateLinks();
+        }
+
+        function disintegrateLinks() {
+            links = links.filter(l => {
+                if (Math.random() < decayRate) {
+                    grid[l.x][l.y] = 1;
+                    substrates.push({ x: l.x, y: l.y });
+                    return false;
+                }
+                return true;
+            });
+        }
+
+        function updateVisualization() {
+            const data = [
+                ...substrates.map(d => ({ type: "substrate", x: d.x * cellSize + cellSize / 2, y: d.y * cellSize + cellSize / 2 })),
+                ...enzymes.map(d => ({ type: "enzyme", x: d.x * cellSize + cellSize / 2, y: d.y * cellSize + cellSize / 2 })),
+                ...links.map(d => ({ type: "link", x: d.x * cellSize + cellSize / 2, y: d.y * cellSize + cellSize / 2 }))
+            ];
+
+            const circles = svg.selectAll("circle")
+                .data(data, d => `${d.type}-${d.x}-${d.y}`);
+
+            circles.exit().remove();
+
+            circles.enter()
+                .append("circle")
+                .attr("r", cellSize / 2)
+                .attr("class", d => `circle-${d.type}`)
+                .merge(circles)
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y);
+
+            d3.select("#status").text(`Sustratos: ${substrates.length}, Enlaces: ${links.length}, Enzimas: ${enzymes.length}`);
+        }
+
+        function getNeighbors(x, y) {
+            const neighbors = [];
+            for (let dx of [-1, 0, 1]) {
+                for (let dy of [-1, 0, 1]) {
+                    if (dx === 0 && dy === 0) continue;
+                    const nx = x + dx;
+                    const ny = y + dy;
+                    if (isValid(nx, ny)) neighbors.push({ x: nx, y: ny });
+                }
+            }
+            return neighbors;
+        }
+
+        function isValid(x, y) {
+            return x >= 0 && x < grid.length && y >= 0 && y < grid[0].length;
+        }
+
+        function animate() {
+            moveSubstrates();
+            interact();
+            updateVisualization();
+            requestAnimationFrame(animate);
+        }
+
+        resetSimulation();
+        animate();
+
+        function resize() {
+            width = vizContainer.clientWidth;
+            height = vizContainer.clientHeight;
+            svg.attr("width", width).attr("height", height);
+            resetSimulation();
+        }
+        window.addEventListener("resize", resize);
+    </script>
+</body>
+</html>
